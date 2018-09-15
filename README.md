@@ -21,3 +21,10 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 * Player cannot leave the pitch boundary
 * Player asks the referee for eligibility to play **after** the 10 seconds has passed
+
+## Approach
+
+* Use `create-react-app` to bootstrap a react project
+* Each player will be their own component
+* Grid will be it's own component
+* Refereee will be part of the top level component
