@@ -1,5 +1,6 @@
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
+![image](https://user-images.githubusercontent.com/24975408/45783244-24ca0580-bc5d-11e8-83df-ddc96b33c11e.png)
 
 ## Overview
 
