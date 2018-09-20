@@ -2,6 +2,8 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ![image](https://user-images.githubusercontent.com/24975408/45784738-c0f60b80-bc61-11e8-81f5-772393611669.png)
 
+## View the [demo](https://buddythumbs.github.io/)
+
 ## Install
 
 ```
