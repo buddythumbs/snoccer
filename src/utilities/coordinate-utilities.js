@@ -2,7 +2,6 @@
 // Function to create 10 (unique) coordinates on 100 x 100 grid
 export const randomPlayers = ({maxWidth=100, maxHeight=100, number=10}) => {
 
-    let occupiedObject = {} 
     let playersArray = []
     for (let i = 0; i < number; i++) {
 
@@ -39,7 +38,7 @@ export const checkIfOccupied = ({x=0,y=0,players=[]}) => {
 // Functiuon that, given and x and y coordinate, will check all players coordinates to see if they occupy that space or are within +/- 2 squares
 export const checkIfCloseOrOccupied = ({x=0,y=0,players=[], i}) => {
     // console.log("x: %f, y: %f",x,y)
-    return players.filter((player,p) => p != i).reduce((occupied,player) => {
+    return players.filter((player,p) => p !== i).reduce((occupied,player) => {
         if((player.x > x-2 && player.x < x+2 ) && ( player.y > y-2 && player.y < y+2 )){
             occupied.closeTo.push(player)
             occupied.close = true

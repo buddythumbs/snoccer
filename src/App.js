@@ -1,10 +1,23 @@
 import React, { Component } from 'react';
-import { theme, Layout, Pitch, Player, PlayerDetail, StyledPre } from './components/Grid'
+
+
+// External libs
 import { injectGlobal } from 'styled-components'
-import { FaBeer } from 'react-icons/fa';
-import { MdAccessibility, MdBookmark } from 'react-icons/md';
+import List from '@material-ui/core/List';
+import Button from '@material-ui/core/Button';
+import PlayArrow from '@material-ui/icons/PlayArrow';
+import Pause from '@material-ui/icons/Pause';
+import Replay from '@material-ui/icons/Replay';
+import ListSubheader from '@material-ui/core/ListSubheader';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+
+// Components
+import PlayerCard from './components/Player'
+import { theme, Layout, Pitch, Player, PlayerDetail, ButtonBar, Middle, HeaderInfo } from './components/Grid'
+
 // Functions
-import { randomPlayers, checkIfOccupied, updateX, updateY, updateCoord, checkIfCloseOrOccupied } from './utilities/coordinate-utilities'
+import { randomPlayers, updateCoord, checkIfCloseOrOccupied } from './utilities/coordinate-utilities'
 
 injectGlobal`
   @import url('ttps://fonts.googleapis.com/css?family=Cutive+Mono');
@@ -19,6 +32,11 @@ injectGlobal`
 class App extends Component { 
   constructor(props){
     super(props)
+
+      this._start = this._start.bind(this)
+      this._pause = this._pause.bind(this)
+      this._reset = this._reset.bind(this)
+      
       this.state = {
         width: 100,
         height: 100,
@@ -31,13 +49,16 @@ class App extends Component {
   }
 
   componentWillMount = () => {
+    this._setup()
+  }
+
+  _setup(){
     const { cycle_time_milliseconds} = this.state
     let players = this.createPlayers()
-    let repeats = 0
     this.timer = setInterval(
       this.updateGame, cycle_time_milliseconds
     )
-    this.setState({ players, cycles: 0 })
+    this.setState({ players, cycles: 0, sin_bin: [] })
   }
 
   createPlayers(){
@@ -49,15 +70,48 @@ class App extends Component {
     })
   }
 
+  _pause(){
+    if(this.timer) {
+      console.log("Pausing timer")
+      clearInterval(this.timer)
+    }
+  }
+
+  _start(){
+    const { cycle_time_milliseconds } = this.state
+    if(this.timer) {
+      console.log("Starting timer")
+      this.timer = setInterval(
+        this.updateGame, cycle_time_milliseconds
+      )
+      return
+    }
+    this._setup()
+  }
+
+  _reset(){
+    if(!this.timer) 
+    clearInterval(this.timer)
+    this.timer = undefined
+    console.log("Resetting timer")
+    this._setup()
+  }
+
   updateGame = () => {
-    const { cycles, players, max_cycles, width, sin_bin } = this.state
+    const { cycles, players, max_cycles, width, height } = this.state
     if(cycles < max_cycles){
 
       let mutatedPlayers = players.map( (player,i) => {
         if(player.color === 'red') {
           player.sin_bin_cycles ++
           if(player.sin_bin_cycles < 10) return player
-          return player.reds < 2 ? { ...player, color: false, sin_bin_cycles: 0 } : player
+          return player.reds < 2 ? { 
+            ...player, 
+            x: Math.round(Math.random() * width), 
+            y: Math.round(Math.random() * height), 
+            color: false, 
+            sin_bin_cycles: 0 
+          } : player
         }
         // Copy the player and get updated coordinates
         let newPlayer = {
@@ -70,11 +124,9 @@ class App extends Component {
 
         let close = checkIfCloseOrOccupied({ x: newPlayer.x, y: newPlayer.y, players,i})
 
-        console.log(close)
         // If the player has a color attribute then it must be a yellow
         if(close.close){
           // debugger
-          console.log("Player: %s got close to %s",newPlayer.player_name, close.closeTo[0])
           newPlayer.color = newPlayer.color === 'yellow' ? 'red' : 'yellow'
 
           if(newPlayer.color === 'red') {
@@ -90,11 +142,21 @@ class App extends Component {
         return newPlayer
       })
 
-      this.setState({
-        // Filter out players with red cards
-        players: mutatedPlayers,
-        cycles: cycles + 1,
-      })
+      if(mutatedPlayers.filter(player => !player.off).length === 1){
+        let winner = mutatedPlayers.filter(player => !player.reds)[0]
+        this.setState({
+          // Filter out players with red cards
+          players: mutatedPlayers,
+          cycles: cycles + 1,
+          winner 
+        })
+      }else{
+        this.setState({
+          // Filter out players with red cards
+          players: mutatedPlayers,
+          cycles: cycles + 1
+        })
+      }
     }else{
       clearInterval(this.timer)
     }
@@ -102,12 +164,9 @@ class App extends Component {
 
   createGrid(){
 
-    const { width, height, grid_square_size, players } = this.state
+    const { grid_square_size, players } = this.state
 
-    let grid =[]
-    let grid_number = 0
-
-    return players.filter(player => player.color != 'red').map((player,i) => {
+    return players.filter(player => player.color !== 'red').map((player,i) => {
       return <Player
         key={i}
         gridSquareSize={grid_square_size}
@@ -115,23 +174,53 @@ class App extends Component {
         y={player.y}
         color={players.color}
         >
-          <PlayerDetail color={player.color}>
-            <MdAccessibility /> { player.color == 'yellow' ? <MdBookmark/> : null}
-          </PlayerDetail>
+          <PlayerDetail reds={player.reds} color={player.color}/>
       </Player>
     })
   }
 
   render() {
-    const { width, height, grid_square_size, players } = this.state
+    const { width, height, grid_square_size, players, cycles, winner } = this.state
     // console.log(sin_bin)
+    let good = players.filter(player => !player.off)
+    let bad = players.filter(player => player.color === 'red')
+
+    if(winner) clearInterval(this.timer)
+
     return ( 
         <Layout gridSquareSize={grid_square_size} gridWidth={width}>
-          <StyledPre>{JSON.stringify(players.filter(player => player.color !== "red"),null,2)}</ StyledPre>
-          <Pitch gridSquareSize={grid_square_size} gridHeight={height} gridWidth={width}>
-           { this.createGrid(width,height)}
-          </Pitch>
-          <StyledPre>{JSON.stringify(players.filter(player => player.off),null,2)}</ StyledPre>
+          <List component="nav">
+            <ListSubheader>Players</ListSubheader>
+            { good.map(player => <PlayerCard key={player.player_name} {...player} />) }
+          </List>
+          <Middle>
+            <Paper style={{padding:10}} elevation={1}>
+              <Typography variant="headline" component="h3">
+                {cycles} seconds
+              </Typography>
+              <Typography component="p">
+                { winner ? `${winner.player_name} wins` : `${players.filter(player => !player.off).length} players left` }
+              </Typography>
+            </Paper>
+            <Pitch gridSquareSize={grid_square_size} gridHeight={height} gridWidth={width}>
+            { this.createGrid(width,height)}
+            </Pitch>
+            <ButtonBar>
+              <Button color={theme.main} onClick={this._start}>
+                <PlayArrow/> Start
+              </Button>
+              <Button color={theme.main} onClick={this._pause}>
+                <Pause/> Pause
+              </Button>
+              <Button color={theme.main} onClick={this._reset}>
+                <Replay/> Restart
+              </Button>
+            </ButtonBar>
+          </Middle>
+          <List component="nav">
+            <ListSubheader>Sin-Binned Players</ListSubheader>
+            { bad.map(player => <PlayerCard key={player.player_name} {...player} />) }
+          </List>
         </Layout>
       )
   }
