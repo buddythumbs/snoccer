@@ -29,6 +29,17 @@ injectGlobal`
     background-color: ${theme.canvas};
   }
 `
+const initialState = {
+  width: 100,
+  height: 100,
+  grid_square_size: 5,
+  number_players: 10,
+  max_cycles: 10000,
+  cycle_time_milliseconds: 100,
+  sin_bin: [],
+  paused: true
+}
+
 class App extends Component { 
   constructor(props){
     super(props)
@@ -37,23 +48,12 @@ class App extends Component {
       this._pause = this._pause.bind(this)
       this._reset = this._reset.bind(this)
       
-      this.state = {
-        width: 100,
-        height: 100,
-        grid_square_size: 5,
-        number_players: 10,
-        max_cycles: 10000,
-        cycle_time_milliseconds: 100,
-        sin_bin: []
-      }
+      this.state = {...initialState}
   }
 
-  componentWillMount = () => {
-    this._setup()
-  }
 
   _setup(){
-    const { cycle_time_milliseconds} = this.state
+    const { cycle_time_milliseconds } = this.state
     let players = this.createPlayers()
     this.timer = setInterval(
       this.updateGame, cycle_time_milliseconds
@@ -87,18 +87,19 @@ class App extends Component {
       return
     }
     this._setup()
+    this.setState({ paused: false })
   }
 
   _reset(){
     if(!this.timer) 
     clearInterval(this.timer)
     this.timer = undefined
-    console.log("Resetting timer")
-    this._setup()
+    this.setState({...initialState})
   }
 
   updateGame = () => {
-    const { cycles, players, max_cycles, width, height } = this.state
+    const { cycles, players, max_cycles, width, height, paused } = this.state
+    if(paused) return
     if(cycles < max_cycles){
 
       let mutatedPlayers = players.map( (player,i) => {
@@ -180,13 +181,14 @@ class App extends Component {
   }
 
   render() {
-    const { width, height, grid_square_size, players, cycles, winner } = this.state
-    // console.log(sin_bin)
-    let good = players.filter(player => !player.off)
-    let bad = players.filter(player => player.color === 'red')
-
+    const { width, height, grid_square_size, players, cycles, winner, number_players, paused } = this.state
+    
+    let good = players ? players.filter(player => !player.off) : []
+    let bad = players ? players.filter(player => player.color === 'red') : []
+    
     if(winner) clearInterval(this.timer)
-
+      
+    
     return ( 
         <Layout gridSquareSize={grid_square_size} gridWidth={width}>
           <List component="nav">
@@ -199,11 +201,11 @@ class App extends Component {
                 {cycles} seconds
               </Typography>
               <Typography component="p">
-                { winner ? `${winner.player_name} wins` : `${players.filter(player => !player.off).length} players left` }
+                { winner ? `${winner.player_name} wins` : `${players ? players.filter(player => !player.off).length: number_players} players left` }
               </Typography>
             </Paper>
             <Pitch gridSquareSize={grid_square_size} gridHeight={height} gridWidth={width}>
-            { this.createGrid(width,height)}
+            { !paused ? this.createGrid(width,height) : "Press Play to Start"}
             </Pitch>
             <ButtonBar>
               <Button color={theme.main} onClick={this._start}>
@@ -213,7 +215,7 @@ class App extends Component {
                 <Pause/> Pause
               </Button>
               <Button color={theme.main} onClick={this._reset}>
-                <Replay/> Restart
+                <Replay/> Reset
               </Button>
             </ButtonBar>
           </Middle>
