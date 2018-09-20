@@ -37,7 +37,8 @@ const initialState = {
   max_cycles: 10000,
   cycle_time_milliseconds: 100,
   sin_bin: [],
-  paused: true
+  paused: true,
+  players: []
 }
 
 class App extends Component { 
@@ -183,7 +184,6 @@ class App extends Component {
   render() {
     const { width, height, grid_square_size, players, cycles, winner, number_players, paused } = this.state
     
-    let good = players ? players.filter(player => !player.off) : []
     let bad = players ? players.filter(player => player.color === 'red') : []
     
     if(winner) clearInterval(this.timer)
@@ -193,7 +193,7 @@ class App extends Component {
         <Layout gridSquareSize={grid_square_size} gridWidth={width}>
           <List component="nav">
             <ListSubheader>Players</ListSubheader>
-            { good.map(player => <PlayerCard key={player.player_name} {...player} />) }
+            { players ? players.filter(player => !player.off).map(player => <PlayerCard key={player.player_name} {...player} />) : null }
           </List>
           <Middle>
             <Paper style={{padding:10}} elevation={1}>
@@ -221,7 +221,7 @@ class App extends Component {
           </Middle>
           <List component="nav">
             <ListSubheader>Sin-Binned Players</ListSubheader>
-            { bad.map(player => <PlayerCard key={player.player_name} {...player} />) }
+            { players ? players.filter(player => player.color === 'red').map(player => <PlayerCard key={player.player_name} {...player} />) : null}
           </List>
         </Layout>
       )
