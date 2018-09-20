@@ -2,7 +2,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ![image](https://user-images.githubusercontent.com/24975408/45838502-c444d200-bd09-11e8-82b0-835ec90a60e8.png)
 
-## View the [demo](https://buddythumbs.github.io/) Press start to start!
+## View the [demo](https://buddythumbs.github.io/) : press start to start!
 
 
 ## Install
