@@ -1,6 +1,6 @@
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
-![image](https://user-images.githubusercontent.com/24975408/45784738-c0f60b80-bc61-11e8-81f5-772393611669.png)
+![image](https://user-images.githubusercontent.com/24975408/45838502-c444d200-bd09-11e8-82b0-835ec90a60e8.png)
 
 ## View the [demo](https://buddythumbs.github.io/)
 
@@ -40,5 +40,8 @@ npm install && npm run start
 * Each cycle_time (1 second) the players will each move 1 space in random +/- and x/y direction and as part of update, check if they moved to within 2 spaces of another player.
 * If they are, they receieve a yellow as long as they have not already got a yellow. If they already had a yellow card, they are given a red and are not in the game for 10 cycles (seconds).
 * The first red is recorded with the player so that the next time they receive a red they are ejected
+* Due to time taken for game to play out the cycle time is actually 100 milliseconds
 
+## TODO
 
+* Testing - not implimented
