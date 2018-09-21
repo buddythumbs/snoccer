@@ -5,8 +5,12 @@ import React, { Component } from 'react';
 import { injectGlobal } from 'styled-components'
 import List from '@material-ui/core/List';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
 import PlayArrow from '@material-ui/icons/PlayArrow';
+import Play from '@material-ui/icons/PlayCircleFilled';
 import Pause from '@material-ui/icons/Pause';
+import FastForward from '@material-ui/icons/FastForward';
+import Rewind from '@material-ui/icons/FastRewind';
 import Replay from '@material-ui/icons/Replay';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import Paper from '@material-ui/core/Paper';
@@ -14,7 +18,17 @@ import Typography from '@material-ui/core/Typography';
 
 // Components
 import PlayerCard from './components/Player'
-import { theme, Layout, Pitch, Player, PlayerDetail, ButtonBar, Middle, HeaderInfo } from './components/Grid'
+import { 
+  theme, 
+  Layout, 
+  Pitch, 
+  Player, 
+  PlayerDetail, 
+  ButtonBar, 
+  Middle,
+  RespButtonBar,
+  RespPaper 
+} from './components/Grid'
 
 // Functions
 import { randomPlayers, updateCoord, checkIfCloseOrOccupied } from './utilities/coordinate-utilities'
@@ -38,7 +52,11 @@ const initialState = {
   cycle_time_milliseconds: 100,
   sin_bin: [],
   paused: true,
-  players: []
+  players: [],
+  sin_bin_wait: 10,
+  max_reds: 2,
+  off_players: 0,
+  started: false,
 }
 
 class App extends Component { 
@@ -59,23 +77,21 @@ class App extends Component {
     this.timer = setInterval(
       this.updateGame, cycle_time_milliseconds
     )
-    this.setState({ players, cycles: 0, sin_bin: [] })
+    this.setState({ players, cycles: 0, sin_bin: [], started: true })
   }
 
   createPlayers(){
     const { width, height, number_players } = this.state
     return randomPlayers({ 
-      max_width:width, 
-      max_height:height, 
+      maxWidth:width, 
+      maxHeight:height, 
       number:number_players 
     })
   }
 
   _pause(){
-    if(this.timer) {
-      console.log("Pausing timer")
-      clearInterval(this.timer)
-    }
+    const { paused } = this.state
+    this.setState({paused: !paused})
   }
 
   _start(){
@@ -99,26 +115,55 @@ class App extends Component {
   }
 
   updateGame = () => {
-    const { cycles, players, max_cycles, width, height, paused } = this.state
+    const { 
+      cycles, 
+      players, 
+      max_cycles, 
+      width, 
+      height, 
+      paused, 
+      sin_bin_wait, 
+      max_reds 
+    } = this.state
+
+    let offPlayers = 0 
+    
     if(paused) return
+    
     if(cycles < max_cycles){
 
       let mutatedPlayers = players.map( (player,i) => {
+                
+        // Check if current player has red card
         if(player.color === 'red') {
+          
+          // add another tick to sin bin cycles
           player.sin_bin_cycles ++
-          if(player.sin_bin_cycles < 10) return player
-          return player.reds < 2 ? { 
-            ...player, 
-            x: Math.round(Math.random() * width), 
-            y: Math.round(Math.random() * height), 
-            color: false, 
-            sin_bin_cycles: 0 
-          } : player
+
+          // Check if the player is under the wait time, if so, just return as-is
+          if(player.sin_bin_cycles < sin_bin_wait || player.off) return player
+
+          // Player in sin bin more than wait time and is not off
+
+            return {
+              ...player, 
+              x: Math.round(Math.random() * width), 
+              y: Math.round(Math.random() * height), 
+              color: 'false', 
+              sin_bin_cycles: 0 
+            } 
         }
+
+        // No red
+
         // Copy the player and get updated coordinates
         let newPlayer = {
           ...player,
-          ...updateCoord({player,max:width,min:0}),
+          ...updateCoord({
+            player,
+            max: width,
+            min:0
+          }),
         }
 
         // Check all other players to see if the new coordinates put current 
@@ -126,14 +171,15 @@ class App extends Component {
 
         let close = checkIfCloseOrOccupied({ x: newPlayer.x, y: newPlayer.y, players,i})
 
-        // If the player has a color attribute then it must be a yellow
         if(close.close){
+
           // debugger
           newPlayer.color = newPlayer.color === 'yellow' ? 'red' : 'yellow'
 
           if(newPlayer.color === 'red') {
             newPlayer.reds ++
-            if(newPlayer.reds < 2){
+            // Check if this is the players first red
+            if(newPlayer.reds < max_reds){
               newPlayer.sin_bin_cycles = 0
             }else{
               newPlayer.off = true
@@ -143,13 +189,14 @@ class App extends Component {
 
         return newPlayer
       })
-
+      console.log(mutatedPlayers.filter(player => !player.off).length)
       if(mutatedPlayers.filter(player => !player.off).length === 1){
-        let winner = mutatedPlayers.filter(player => !player.reds)[0]
+        let winner = mutatedPlayers.filter(player => !player.off)[0]
         this.setState({
           // Filter out players with red cards
           players: mutatedPlayers,
           cycles: cycles + 1,
+          paused: true,
           winner 
         })
       }else{
@@ -182,44 +229,55 @@ class App extends Component {
   }
 
   render() {
-    const { width, height, grid_square_size, players, cycles, winner, number_players, paused } = this.state
+    const { width, height, grid_square_size, players, cycles, winner, number_players, paused, started, cycle_time_milliseconds } = this.state
     
     let bad = players ? players.filter(player => player.color === 'red') : []
     
     if(winner) clearInterval(this.timer)
       
+    const Buttons = [
+      <IconButton  color={theme.main} onClick={this._start} disabled={started ? true : false } >
+        <Play/> 
+      </IconButton >,
+      <IconButton  color={theme.main} onClick={this._pause}>
+        { !paused ?  <Pause/> :<PlayArrow/> }
+      </IconButton >,
+      <IconButton  color={theme.main} onClick={this._reset}>
+        <Replay/> 
+      </IconButton >,
+    ]
     
     return ( 
         <Layout gridSquareSize={grid_square_size} gridWidth={width}>
           <List component="nav">
+            <RespButtonBar>
+              { Buttons }
+            </RespButtonBar>
             <ListSubheader>Players</ListSubheader>
             { players ? players.filter(player => !player.off).map(player => <PlayerCard key={player.player_name} {...player} />) : null }
           </List>
           <Middle>
             <Paper style={{padding:10}} elevation={1}>
-              <Typography variant="headline" component="h3">
+              <Typography style={{display: 'flex', justifyContent: 'space-between'}} variant="headline" component="h3">
                 {cycles} seconds
               </Typography>
               <Typography component="p">
-                { winner ? `${winner.player_name} wins` : `${players ? players.filter(player => !player.off).length: number_players} players left` }
+                { winner ? `${winner.player_name} wins!!!` : `${players ? players.filter(player => !player.off).length: number_players} players left` }
               </Typography>
             </Paper>
             <Pitch gridSquareSize={grid_square_size} gridHeight={height} gridWidth={width}>
             { !paused ? this.createGrid(width,height) : "Press Play to Start"}
             </Pitch>
             <ButtonBar>
-              <Button color={theme.main} onClick={this._start}>
-                <PlayArrow/> Start
-              </Button>
-              <Button color={theme.main} onClick={this._pause}>
-                <Pause/> Pause
-              </Button>
-              <Button color={theme.main} onClick={this._reset}>
-                <Replay/> Reset
-              </Button>
+              { Buttons }
             </ButtonBar>
           </Middle>
           <List component="nav">
+            <RespPaper style={{padding:10}} elevation={1}>
+              <Typography style={{display: 'flex', justifyContent: 'space-between'}} variant="headline" component="h3">
+                {cycles} seconds /  { winner ? `${winner.player_name} wins!!!` : `${players ? players.filter(player => !player.off).length: number_players} players` }
+              </Typography>
+            </RespPaper>
             <ListSubheader>Sin-Binned Players</ListSubheader>
             { players ? players.filter(player => player.color === 'red').map(player => <PlayerCard key={player.player_name} {...player} />) : null}
           </List>
