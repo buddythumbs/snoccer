@@ -119,6 +119,11 @@ export const RespButtonBar = styled.div`
     }
 `
 
-export const HeaderInfo = styled.div`
-
+export const StyledSpan = styled.div`
+    color: ${theme.canvas};
+    width: 100%;
+    height: 100%;
+    display: flex; 
+    justify-content: center;
+    align-items: center;
 `

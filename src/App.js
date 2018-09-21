@@ -24,11 +24,13 @@ import {
   ButtonBar, 
   Middle,
   RespButtonBar,
-  RespPaper 
+  RespPaper,
+  StyledSpan
 } from './components/Grid'
 
 // Functions
 import { randomPlayers, updateCoord, checkIfCloseOrOccupied } from './utilities/coordinate-utilities'
+import spacing from '../node_modules/@material-ui/core/styles/spacing';
 
 injectGlobal`
   @import url('https://fonts.googleapis.com/css?family=Cutive+Mono');
@@ -259,7 +261,13 @@ class App extends Component {
               </Typography>
             </Paper>
             <Pitch gridSquareSize={grid_square_size} gridHeight={height} gridWidth={width}>
-            { !paused ? this.createGrid(width,height) : "Press Play to Start"}
+              { 
+                !paused ? 
+                this.createGrid(width,height) : 
+                  started ? 
+                  <StyledSpan> Press Play to Resume </StyledSpan>:
+                  <StyledSpan> Press Play to Start </StyledSpan>
+              }
             </Pitch>
             <ButtonBar>
               { Buttons }
