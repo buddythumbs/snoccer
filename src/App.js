@@ -4,13 +4,10 @@ import React, { Component } from 'react';
 // External libs
 import { injectGlobal } from 'styled-components'
 import List from '@material-ui/core/List';
-import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import PlayArrow from '@material-ui/icons/PlayArrow';
 import Play from '@material-ui/icons/PlayCircleFilled';
 import Pause from '@material-ui/icons/Pause';
-import FastForward from '@material-ui/icons/FastForward';
-import Rewind from '@material-ui/icons/FastRewind';
 import Replay from '@material-ui/icons/Replay';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import Paper from '@material-ui/core/Paper';
@@ -34,7 +31,7 @@ import {
 import { randomPlayers, updateCoord, checkIfCloseOrOccupied } from './utilities/coordinate-utilities'
 
 injectGlobal`
-  @import url('ttps://fonts.googleapis.com/css?family=Cutive+Mono');
+  @import url('https://fonts.googleapis.com/css?family=Cutive+Mono');
 
   body {
     font-family: 'Cutive Mono', monospace;
@@ -126,8 +123,6 @@ class App extends Component {
       max_reds 
     } = this.state
 
-    let offPlayers = 0 
-    
     if(paused) return
     
     if(cycles < max_cycles){
@@ -229,9 +224,7 @@ class App extends Component {
   }
 
   render() {
-    const { width, height, grid_square_size, players, cycles, winner, number_players, paused, started, cycle_time_milliseconds } = this.state
-    
-    let bad = players ? players.filter(player => player.color === 'red') : []
+    const { width, height, grid_square_size, players, cycles, winner, number_players, paused, started } = this.state
     
     if(winner) clearInterval(this.timer)
       
