@@ -39,7 +39,7 @@ export const Layout = styled.div`
     grid-gap: 10px;
     @media only screen and (max-width: 1120px) {
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr;
+        grid-template-rows: 1fr auto;
     }
     
 `
@@ -99,6 +99,24 @@ export const ButtonBar = styled.div`
     padding: 10px;
     display: flex;
     justify-content: space-between;
+`
+
+export const RespPaper = styled(Paper)`
+    display: none;
+    @media only screen and (max-width: 1120px) {
+        display: flex;
+        align-items: center;
+        grid-column: 1 / 3;
+        grid-row: 1 /2 ;
+    }
+`
+
+export const RespButtonBar = styled.div`
+    display: none;
+    @media only screen and (max-width: 1120px) {
+        display: flex;
+        align-items: center;
+    }
 `
 
 export const HeaderInfo = styled.div`
